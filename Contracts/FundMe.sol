@@ -6,24 +6,27 @@ pragma solidity ^0.8.0;
 
 import './PriceConverter.sol';
 
+error NotOwner();
+
 contract FundMe{
 
     using PriceConverter for uint256; //this how you call a library
-
-    uint256 public minimumUSD = 50 *1e18;
-
     address[] public funders;
-
     mapping (address => uint256) public addressToAmountFunded;
 
-    address public owner;
+    //constant keyword dont use any storage, naming convention is also different ALL CAPS and use _. - Can only be set once!!
+    uint256 public constant MINIMUM_USD = 50 *1e18;
+    //immutable can be assigned while launhting teh contract. Both Constant and Immutable keyword are gas efficient and must be used carefully. - Can only be set once or at the
+    // time of deploying a contract!!
+    address public immutable i_owner;
 
     constructor (){
-        owner = msg.sender;
+        i_owner = msg.sender;
     }
 
     modifier onlyOwner(){
-        require(owner == msg.sender, "Sender is not owner");
+        // require(i_owner == msg.sender, "Sender is not owner");
+        if(i_owner == msg.sender) { revert NotOwner();}
         _;
     }
 
@@ -32,7 +35,7 @@ contract FundMe{
         // 1. How to we send ETH to this contract - by making it payable
         //require(getConversionRate(msg.value )> minimumUSD, "Not enough Fund"); //1e18 ==1 * 10 **8 == 1 eth
 
-        require(msg.value.getConversionRate() > minimumUSD, "Not enough Fund"); // this method is used whwn using a library;
+        require(msg.value.getConversionRate() > MINIMUM_USD, "Not enough Fund"); // this method is used whwn using a library;
 
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] = msg.value;
@@ -63,5 +66,18 @@ contract FundMe{
         //call - return bool and byes data(always in memory, becoz its an error), its the recommded way to send and receive eth or other native token.
         (bool callSucess, ) = payable(msg.sender).call{value: address(this).balance}('');
         require(callSucess, "Call Failed");        
+    }
+
+    //what happen if the person send ETH to this contract wothout calling the fund function?
+
+    //receive()
+    //fallback()
+
+    receive() external payable{
+        fund();
+    }
+
+    fallback() external payable{
+        fund();
     }
 }
