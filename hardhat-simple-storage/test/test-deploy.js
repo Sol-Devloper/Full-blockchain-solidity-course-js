@@ -28,7 +28,12 @@ describe('simpleStroage', function() {
     const currentValue = await simpleStorage.retrieve();
     //console.log(currentValue);
     assert.equal(currentValue.toString(), expectedValue);
+  })
 
-
+  it("Adding people", async function() {
+    const person = 'Amit';
+    const favoriteNumber = '8'
+    const addPeople = await simpleStorage.addPerson(person,favoriteNumber);
+    await addPeople.wait(1);
   })
 })
