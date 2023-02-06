@@ -3,7 +3,6 @@ require("@nomiclabs/hardhat-ethers");
 require('hardhat-deploy');
 require("dotenv").config();
 
-
 const GOERLI_RPC_URL = process.env.GOERLI_RPC_URL || "http:/" ;
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "unvalid" ;
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "key" ;
