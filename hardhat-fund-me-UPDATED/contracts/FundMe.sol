@@ -21,31 +21,19 @@ contract FundMe {
     using PriceConverter for uint256;
 
     //State Variables
-    mapping(address => uint256) public s_addressToAmountFunded;
-    address[] public s_funders;
+    mapping(address => uint256) private s_addressToAmountFunded;
+    address[] private s_funders;
 
     // Could we make this constant?
     address public immutable i_owner;
     uint256 public constant MINIMUM_USD = 50 * 10 ** 18;
 
-    AggregatorV3Interface public s_priceFeed;
-
+    AggregatorV3Interface private s_priceFeed;
     // Events (we have none!)
-
     modifier onlyOwner() {
         if (msg.sender != i_owner) revert FundMe__NotOwner();
         _;
     }
-
-    // Functions Order:
-    //// constructor
-    //// receive
-    //// fallback
-    //// external
-    //// public
-    //// internal
-    //// private
-    //// view / pure
 
     constructor(address priceFeedAddress) {
         i_owner = msg.sender;
@@ -106,4 +94,30 @@ contract FundMe {
         (bool callSuccess, ) = i_owner.call{value: address(this).balance}("");
         require(callSuccess, "Call failed");
     }
+
+    function getFundersAmount(address _funders) public view returns (uint256) {
+        return s_addressToAmountFunded[_funders];
+    }
+
+    function getFunder(uint256 index) public view returns (address) {
+        return s_funders[index];
+    }
+
+    function getOwner() public view returns (address) {
+        return i_owner;
+    }
+
+    function getPriceFeed() public view returns (AggregatorV3Interface) {
+        return s_priceFeed;
+    }
 }
+
+// Functions Order:
+//// constructor
+//// receive
+//// fallback
+//// external
+//// public
+//// internal
+//// private
+//// view / pure
