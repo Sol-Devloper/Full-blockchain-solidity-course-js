@@ -42,7 +42,7 @@ module.exports = async function({getNamedAccounts, deployments}) {
         waitConfimations: network.config.blockConfirmations || 1,
     })
 
-    await vrfCoordinatorV2Mock.addConsumer(subscriptionId, lottery.address);
+    //await vrfCoordinatorV2Mock.addConsumer(subscriptionId, lottery.address);
 
     if(!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY){
         log("Verifying...");
