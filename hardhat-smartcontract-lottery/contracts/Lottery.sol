@@ -54,7 +54,7 @@ contract Lottery is VRFConsumerBaseV2, KeeperCompatibleInterface {
 
     /* Functions */
     constructor(
-        address vrfCoordinatorV2,
+        address vrfCoordinatorV2, //contract address - need mock
         uint256 entranceFee,
         bytes32 gasLane,
         uint64 subsciptionId,
@@ -72,10 +72,10 @@ contract Lottery is VRFConsumerBaseV2, KeeperCompatibleInterface {
     }
 
     function enterLottery() public payable {
-        if (msg.value > i_entranceFee) {
+        if (msg.value < i_entranceFee) {
             revert Lottery__NotEnoughETHEntered();
         }
-        if (s_lotteryState == LotteryState.OPEN) {
+        if (s_lotteryState != LotteryState.OPEN) {
             revert Lotter__IsNotOpen();
         }
 
@@ -174,5 +174,9 @@ contract Lottery is VRFConsumerBaseV2, KeeperCompatibleInterface {
 
     function getRequestConfirmation() public pure returns (uint256) {
         return REQUEST_CONFIRMATIONS;
+    }
+
+    function getInterval() public view returns (uint256) {
+        return i_interval;
     }
 }
