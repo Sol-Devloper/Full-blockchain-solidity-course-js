@@ -1,7 +1,5 @@
 const {getWeth, AMOUNT} = require("../scripts/getWeth.js")
 const {ethers, getNamedAccounts, network} = require("hardhat");
-const { isCommunityResourcable } = require("@ethersproject/providers");
-
 
 async function main(){
     await getWeth();
@@ -20,15 +18,24 @@ async function main(){
 
     //AvailableBorrowETH?? what the conversion rate on DAI?
 
-    //borrow
+    //borrow settings
     let {availableBorrowsETH, totalDebtETH} = await getBorrowUserData(lendingPool, deployer);
     const daiPrice = await getDaiPrice();
     const amountDaiToBorrow = availableBorrowsETH.toString() * 0.95 * (1 / daiPrice.toNumber());
-    console.log(`You can borrow ${amountDaiToBorrow.toString()} DAI`);
+    console.log(`You can borrow ${amountDaiToBorrow} DAI`);
 
-    // const amountDaiToBorrowWei = await ethers.utils.parseEther(amountDaiToBorrow.toString());
-    // console.log(`Dai in wei ${amountDaiToBorrowWei.toString()}`);
+    const amountDaiToBorrowWei = await ethers.utils.parseEther(amountDaiToBorrow.toString());
+    console.log(`Dai in wei ${amountDaiToBorrowWei.toString()}`);
+
+    //Borrow
+    const daiTokenAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+    await borrowDai(daiTokenAddress, lendingPool, amountDaiToBorrowWei, deployer);
+    await getBorrowUserData(lendingPool, deployer);
+
+    await repay(amountDaiToBorrowWei, daiTokenAddress, lendingPool, deployer);
+    await getBorrowUserData(lendingPool, deployer);
 }
+
 async function getDaiPrice(){
     //DAI/ETH - address - 0x773616E4d11A78F511299002da57A0a94577F1f4
     const daiEthPriceFeed = await ethers.getContractAt("AggregatorV3Interface", "0x773616E4d11A78F511299002da57A0a94577F1f4");
@@ -42,7 +49,8 @@ async function getBorrowUserData(lendingPool, account){
     console.log(`You have ${totalCollateralETH} worth of ETH deposited!`);
     console.log(`You have ${totalDebtETH} worth of ETH debt!`);
     console.log(`You can borrow ${availableBorrowsETH} worth of ETH!`);
-    return(totalDebtETH, availableBorrowsETH);
+    //return{totalDebtETH, availableBorrowsETH};
+    return{availableBorrowsETH, totalDebtETH};
 }
 
 async function getLandingPool(account){
@@ -59,6 +67,20 @@ async function approveErc20(erc20Address, spenderAddress, amountToSpend, account
     const tx = await erc20Token.approve(spenderAddress, amountToSpend);
     await tx.wait(1);
     console.log("Approved!!");
+}
+
+async function borrowDai(daiAddress, lendingPool, amountToBorrowWei, account) {
+    const borrowTx = await lendingPool.borrow(daiAddress, amountToBorrowWei, 1, 0, account);
+    await borrowTx.wait(1);
+    console.log("You have borrowed!")
+
+}
+
+async function repay(amount, daiAddress, lendingPool, account){
+    await approveErc20(daiAddress, lendingPool.address, amount, account);
+    const repayTx = await lendingPool.repay(daiAddress, amount, 1, account);
+    await repayTx.wait(1);
+    console.log("Repaid");
 }
 
 
